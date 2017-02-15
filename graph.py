@@ -6,24 +6,35 @@ import webbrowser as wwindow
 
 ####################################################################################################
 commandHelp = '''
+***NOTE***: This script is only really for plotting 2D functions/lines, but can handle multiple lines for a single graph.
+
 Options for running script:
  - 'filename.ext': input filename that will be opened; cannot be ommitted, and must be first argument after script!!!
 
- - '-c' or '-r': for each line's y-value points being in columns or rows; cannot be ommitted!!!
+ - '-c' or '-r': for each line's y-value points being in columns or rows; cannot be ommitted!!! (e.g., if you have a line
+                     whose data points are like "1,2,3,4" for -r vs. "...,1,...\n...,2,...\n...,3,...\n...,4,..." for -c)
  
- - '-firstlabel': if the first row/column is going to indicate the columns'/rows' label
+ - '-firstlabel': if the first row/column encountered during parsing a section is going to indicate the columns'/rows' label
  
  - '-section __(some integer)__': if the inputted data is broken up by blank lines/wordy text into sections,
                                     which section to choose; if left out, makes graphs for each section in data
+                                    (e.g., if your data looked like "header1,header2,header3\n1,1,1\n2,3,4\n3,5,7\n\n\n\n
+                                    blah blah blah\nheader4,header5,header6\n0,0,0\n5,10,15\n10,20,30", then because of all
+                                    those newline characters in the middle, my script would interpret that as 2 different, 
+                                    sections of data, the first being integer index 0 and the second being integer index 1)
+                                    (P.S. in the example above, that would also be specified as -c for the axis-organization)
                                     
- - '-select __(int1),(int2),(...)__': which rows/columns to of the section to plot lines for (NO spaces in 2nd argument!);
-                                         if ommitted, plots data for each line
+ - '-select __(int1),(int2),(...)__': which rows/columns of the given section to plot lines for (NO spaces in 2nd argument!);
+                                         if ommitted, plots data for each line (interpreting different lines depending on -c/-r)
                                          
  - '-xrange __(lower limit),(upper limit)__': lower and upper range for x-axis ticks (NO spaces in 2nd argument!)
  
  - '-yrange __(lower limit),(upper limit)__': lower and upper range for y-axis ticks (NO spaces in 2nd argument!)
  
  - '-xaxis': if set, chooses the first row/column's values as the corresponding x-values for all other lines' y-values
+                 (e.g. if you had -c and something like "0,5.0,6.75\n1,4.0,7.0\n2,3.0,7.25\n3,2.0,7.5", and you set this flag,
+                 it would interpret the first column as the x-axis, so each other column would be interpreted as having x,y points
+                 of (0,__), (1,__), (2,__), (3,__) based on the values of this first column)
 
  - '-t __(some title)__': graph title; if ommitted, script will prompt user to manually type it in later, for each graph
 
@@ -32,7 +43,8 @@ Options for running script:
  - '-y __(some label)__': y-axis label; if ommitted, script will prompt user to manually type it in later, for each graph
 
  - '-beauty': if you set this flag, when the time comes to create the graph, you'll be manually prompted to enter in the specifications
-                for various parameters of the matplotlib utility functions; if ommitted, uses hardcoded default values/options
+                for various parameters of the matplotlib utility functions; if ommitted, uses hardcoded default values/options; I'm still
+                adding various options to greater manipulate specifications of the matplotlib graphs!
 
  - '-display': if you set this flag, will attempt to open up the saved graph-picture in either a photo viewer or matplotlib's utilities;
                  shouldn't use this if you're executing this script from command-line, unless you have some sort of GUI for display
