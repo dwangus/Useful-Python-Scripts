@@ -3,6 +3,22 @@ import imageio
 from moviepy.editor import *
 import sys
 import os
+#######################################
+comments = """ - Must have arguments of times in 'start-end' (e.g. 30-40 (in terms of seconds)) format and specify output file with '-o some_outputfilename.mp4'.
+
+ - Also, you can specify numbers as either 'X_Y' between X and Y seconds, or 'A-B_X-Y' for clips between (A minutes, B seconds) to (X minutes, Y seconds) in the video.
+ 
+ - Example usage of script:
+ 
+     \'python clip.py inputvideo_filename.mp4 3-5_4-16 12-1_12-45 -o some_output_filename.mp4\'
+     
+   (This will basically clip inputvideo_filename.mp4 into 2 separate clips, one between 3:05 and 4:16 minutes, another between 12:01 and 12:45 minutes -- and then stitch
+    the two clips together into one final video called some_output_filename.mp4!)
+     
+ - Additional arguments are, for now, the \'-separate\' flag -- if set and there are multiple clips in the original video, it just clips them into separate, stand-alone
+     video files with the name some_output_filename0.mp4, some_output_filename1.mp4, etc. etc.
+"""
+#######################################
 
 def isInt(s):
     try: 
@@ -52,11 +68,9 @@ def clip(args, inputfile, outputfile, separate=False):
 if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) < 3 or "-h" in args or "-help" in args:
-        print("Must have arguments of times in 'start-end' (e.g. 30-40) format and specify output file with '-o some_outputfilename.mp4'.")
-        print("Also, yoou can specify numbers as either 'x-y' between x and y seconds, or 'a-b_x-y' for clips between (a minutes, b seconds) to (x minutes, y seconds) in the video.")
-        print("Example usage of script: \'python clip.py inputvideo_filename.mp4 3-5_4-16 12-1_12-45 -o some_output_filename.mp4\'")
-        print("This will basically clip inputvideo_filename.mp4 into 2 separate clips, one between 3:05 and 4:16 minutes, another between 12:01 and 12:45 minutes -- and then stitch the two clips together into one final video called some_output_filename.mp4!")
-        print("Additional arguments are, for now, the \'-separate\' flag -- if set and there are multiple clips in the original video, it just clips them into separate, stand-alone video files with the name some_output_filename0.mp4, some_output_filename1.mp4, etc. etc.")
+        if len(args) < 3 and "-h" not in args and "-help" not in args:
+            print("Error in number of arguments: see below comments...")
+        print(comments)
         sys.exit()
 
     videofile = args[0]
