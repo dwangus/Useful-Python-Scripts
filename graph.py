@@ -6,19 +6,30 @@ import webbrowser as wwindow
 
 ####################################################################################################
 commandHelp = '''
-***NOTE***: This script is only really for plotting 2D functions/lines, but can handle multiple lines for a single graph.
+***NOTE***: This script is only really for plotting 2D functions/lines, but can
+            handle multiple lines for a single graph.
 
 Options for running script:
- - 'filename.ext': input filename that will be opened; cannot be ommitted, and must be first argument after script!!!
+ - 'filename.ext': input filename that will be opened; cannot be ommitted, and must
+                     be first argument after script!!!
 
- - '-c' or '-r': for each line's y-value points being in columns or rows; cannot be ommitted!!! (e.g., if you have a line
-                     whose data points are like "1,2,3,4" for -r vs. "...,1,...\n...,2,...\n...,3,...\n...,4,..." for -c)
+ - '-c' or '-r': for each line's y-value points being in columns or rows; cannot be
+                     ommitted!!!
+                     (e.g., if you have a line whose data points are like
+                     1,2,3,4 for -r
+                         vs.
+                     ...,1,...
+                     ...,2,...
+                     ...,3,...
+                     ...,4,... for -c)
  
- - '-firstlabel': if the first row/column encountered during parsing a section is going to indicate the columns'/rows' label
+ - '-firstlabel': if the first row/column encountered during parsing a section is
+                     going to indicate the columns'/rows' label
  
- - '-section __(some integer)__': if the inputted data is broken up by blank lines/wordy text into sections,
-                                    which section to choose; if left out, makes graphs for each section in data
-                                    (e.g., if your data looked like...
+ - '-section __(some integer)__': if the inputted data is broken up by blank
+                                    lines/wordy text into sections, which section to
+                                    choose; if left out, makes graphs for each section
+                                    in data (e.g., if your data looked like...
                                     
                                     header1,header2,header3
                                     1,1,1
@@ -32,46 +43,65 @@ Options for running script:
                                     5,10,15
                                     10,20,30
                                     
-                                    ...then because of all those newline characters in the middle, my script would interpret
-                                    that as 2 different, sections of data, the first being integer index 0 and the second being
-                                    integer index 1) (P.S. in the example above, that would also be specified as -c for axis-organization)
+                                    ...then because of all those newline characters in
+                                    the middle, my script would interpret that as 2
+                                    different, sections of data, the first being integer
+                                    index 0 and the second being integer index 1) (P.S.
+                                    in the example above, that would also be specified
+                                    as -c for axis-organization)
                                     
- - '-select __(int1),(int2),(...)__': which rows/columns of the given section to plot lines for (NO spaces in 2nd argument!);
-                                         if ommitted, plots data for each line (interpreting different lines depending on -c/-r)
+ - '-select __(int1),(int2),(...)__': which rows/columns of the given section to plot
+                                         lines for (NO spaces in 2nd argument!); if ommitted,
+                                         plots data for each line (interpreting different
+                                         lines depending on -c/-r)
                                          
- - '-xrange __(lower limit),(upper limit)__': lower and upper range for x-axis ticks (NO spaces in 2nd argument!)
+ - '-xrange __(lower limit),(upper limit)__': lower and upper range for x-axis ticks
+                                                (NO spaces in 2nd argument!)
  
- - '-yrange __(lower limit),(upper limit)__': lower and upper range for y-axis ticks (NO spaces in 2nd argument!)
+ - '-yrange __(lower limit),(upper limit)__': lower and upper range for y-axis ticks
+                                                 (NO spaces in 2nd argument!)
  
- - '-xaxis': if set, chooses the first row/column's values as the corresponding x-values for all other lines' y-values
-                 (e.g. if you had -c and something like...
+ - '-xaxis': if set, chooses the first row/column's values as the corresponding x-values for
+             all other lines' y-values (e.g. if you had -c and something like...
                  
                  0,5.0,6.75
                  1,4.0,7.0
                  2,3.0,7.25
                  3,2.0,7.5
+             ...and you set this flag, it would interpret the first column as the x-axis, so
+             each other column would be interpreted as having x,y points of (0,__), (1,__),
+             (2,__), (3,__) based on values of this first column)
 
-                 ...and you set this flag, it would interpret the first column as the x-axis, so each other column would
-                 be interpreted as having x,y points of (0,__), (1,__), (2,__), (3,__) based on values of this first column)
+ - '-t __(some title)__': graph title; if ommitted, script will prompt user to manually type
+                             it in later, for each graph
 
- - '-t __(some title)__': graph title; if ommitted, script will prompt user to manually type it in later, for each graph
+ - '-x __(some label)__': x-axis label; if ommitted, script will prompt user to manually
+                             type it in later, for each graph
 
- - '-x __(some label)__': x-axis label; if ommitted, script will prompt user to manually type it in later, for each graph
+ - '-y __(some label)__': y-axis label; if ommitted, script will prompt user to manually
+                             type it in later, for each graph
 
- - '-y __(some label)__': y-axis label; if ommitted, script will prompt user to manually type it in later, for each graph
+ - '-beauty': if you set this flag, when the time comes to create the graph, you'll be
+                 manually prompted to enter in the specifications for various parameters of
+                 the matplotlib utility functions; if ommitted, uses hardcoded default
+                 values/options; I'm still adding various options to greater manipulate
+                 specifications of the matplotlib graphs!
 
- - '-beauty': if you set this flag, when the time comes to create the graph, you'll be manually prompted to enter in the specifications
-                for various parameters of the matplotlib utility functions; if ommitted, uses hardcoded default values/options; I'm still
-                adding various options to greater manipulate specifications of the matplotlib graphs!
+ - '-display': if you set this flag, will attempt to open up the saved graph-picture in
+                 either a photo viewer or matplotlib's utilities; shouldn't use this if
+                 you're executing this script from command-line, unless you have some sort of
+                 GUI for display
 
- - '-display': if you set this flag, will attempt to open up the saved graph-picture in either a photo viewer or matplotlib's utilities;
-                 shouldn't use this if you're executing this script from command-line, unless you have some sort of GUI for display
-
- - '-o __(some filename)__' or just '__(some filename)__': output base filename; can be specified with the -o flag or not; if there
-                                                             are multiple graphs, then we name each saved file with just an incremented
-                                                             integer appended to the original "base" filename; if ommitted altogether,
-                                                             will just use "1", "2", "3", etc. as the filenames; if no extension in the
-                                                             filename provided, default is to save it in a .png file format.
+ - '-o __(some filename)__' or just '__(some filename)__': output base filename; can be specified
+                                                             with the -o flag or not; if there
+                                                             are multiple graphs, then we name each
+                                                             saved file with just an incremented
+                                                             integer appended to the original "base"
+                                                             filename; if ommitted altogether, will
+                                                             just use "1", "2", "3", etc. as the
+                                                             filenames; if no extension in the
+                                                             filename provided, default is to save
+                                                             it in a .png file format.
 '''
 ####################################################################################################
 def isInt(s):
