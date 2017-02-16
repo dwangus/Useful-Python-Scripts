@@ -18,11 +18,23 @@ Options for running script:
  
  - '-section __(some integer)__': if the inputted data is broken up by blank lines/wordy text into sections,
                                     which section to choose; if left out, makes graphs for each section in data
-                                    (e.g., if your data looked like "header1,header2,header3\n1,1,1\n2,3,4\n3,5,7\n\n\n\n
-                                    blah blah blah\nheader4,header5,header6\n0,0,0\n5,10,15\n10,20,30", then because of all
-                                    those newline characters in the middle, my script would interpret that as 2 different, 
-                                    sections of data, the first being integer index 0 and the second being integer index 1)
-                                    (P.S. in the example above, that would also be specified as -c for the axis-organization)
+                                    (e.g., if your data looked like...
+                                    
+                                    header1,header2,header3
+                                    1,1,1
+                                    2,3,4
+                                    3,5,7
+
+                                    *blah blah blah...*
+
+                                    header4,header5,header6
+                                    0,0,0
+                                    5,10,15
+                                    10,20,30
+                                    
+                                    ...then because of all those newline characters in the middle, my script would interpret
+                                    that as 2 different, sections of data, the first being integer index 0 and the second being
+                                    integer index 1) (P.S. in the example above, that would also be specified as -c for axis-organization)
                                     
  - '-select __(int1),(int2),(...)__': which rows/columns of the given section to plot lines for (NO spaces in 2nd argument!);
                                          if ommitted, plots data for each line (interpreting different lines depending on -c/-r)
@@ -32,9 +44,15 @@ Options for running script:
  - '-yrange __(lower limit),(upper limit)__': lower and upper range for y-axis ticks (NO spaces in 2nd argument!)
  
  - '-xaxis': if set, chooses the first row/column's values as the corresponding x-values for all other lines' y-values
-                 (e.g. if you had -c and something like "0,5.0,6.75\n1,4.0,7.0\n2,3.0,7.25\n3,2.0,7.5", and you set this flag,
-                 it would interpret the first column as the x-axis, so each other column would be interpreted as having x,y points
-                 of (0,__), (1,__), (2,__), (3,__) based on the values of this first column)
+                 (e.g. if you had -c and something like...
+                 
+                 0,5.0,6.75
+                 1,4.0,7.0
+                 2,3.0,7.25
+                 3,2.0,7.5
+
+                 ...and you set this flag, it would interpret the first column as the x-axis, so each other column would
+                 be interpreted as having x,y points of (0,__), (1,__), (2,__), (3,__) based on values of this first column)
 
  - '-t __(some title)__': graph title; if ommitted, script will prompt user to manually type it in later, for each graph
 
