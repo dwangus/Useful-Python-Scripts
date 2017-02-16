@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import webbrowser as wwindow
+from __future__ import print_function
 
 ####################################################################################################
 commandHelp = '''
@@ -126,6 +127,8 @@ def isFloat(s):
         return False
 
 def userInput(prompt, vers3):
+    return sys.stdin.readline().strip()
+    '''
     if vers3:
         return input(prompt)
     else:
@@ -134,6 +137,7 @@ def userInput(prompt, vers3):
         except NameError:
             print("Wrong input function based on version.")
             pass
+    '''
 ######################################################################
 
 
@@ -232,6 +236,18 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
 
     if flags[opts["beauty"]]:
         print("Simply skip any options if you want the default by pressing -enter-.")
+        '''
+        print("\nEnter a marker shape for all lines in this graph (Default: {}) (see matplotlib docs for examples): ".format(defaults['mark']), end='')
+        mark = sys.stdin.readline().strip()
+        print("\nEnter a line-style for all lines in this graph (Default: {}) (see matplotlib docs for examples): ".format(defaults['line']), end='')
+        linetype = sys.stdin.readline().strip()
+        print("\nEnter a location option for the graph's legend (Default: {}) (see matplotlib docs for examples): ".format(defaults['loc']), end='')
+        locChoice = sys.stdin.readline().strip()
+        print("\nEnter a relative anchor X location for the graph's legend (Default: None) (see matplotlib docs for examples): ", end='')
+        bboxAnchorX = sys.stdin.readline().strip()
+        print("\nEnter a relative anchor Y location for the graph's legend (Default: None) (see matplotlib docs for examples): ", end='')
+        bboxAnchorY = sys.stdin.readline().strip()
+        #'''
         mark = userInput("Enter a marker shape for all lines in this graph (Default: {}) (see matplotlib docs for examples): ".format(defaults['mark']), is3)
         linetype = userInput("Enter a line-style for all lines in this graph (Default: {}) (see matplotlib docs for examples): ".format(defaults['line']), is3)
         locChoice = userInput("Enter a location option for the graph's legend (Default: {}) (see matplotlib docs for examples): ".format(defaults['loc']), is3)
@@ -274,6 +290,10 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
                 appendInt = 0
                 offset = len(inputLineName)
             for l in range(len(lineData)):
+                '''
+                print("\nEnter a name for line{}: ".format(li), end='')
+                lineNames.append(sys.stdin.readline().strip())
+                #'''
                 lineNames.append(inputLineName[:offset] + str(appendInt + l))
         else:
             for l in range(len(lineData)):
@@ -282,15 +302,21 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
     legend = ax.legend(lineNames, bbox_to_anchor=bboxAnchor, loc=locOption)
 
     if len(flags[opts["xlabel"]]) == 0:
+        #print("\nX-Axis Label: ", end='')
+        #ax.set_xlabel(sys.stdin.readline().strip())
         ax.set_xlabel(userInput("X-Axis Label: ", is3))
     else:
         ax.set_xlabel(flags[opts["xlabel"]])
     if len(flags[opts["ylabel"]]) == 0:
+        #print("\nY-Axis Label: ", end='')
+        #ax.set_ylabel(sys.stdin.readline().strip())
         ax.set_ylabel(userInput("Y-Axis Label: ", is3))
     else:
         ax.set_ylabel(flags[opts["ylabel"]])
 
     if len(flags[opts["title"]]) == 0:
+        #print("\nTitle of Graph: ", end='')
+        #ax.set_title(sys.stdin.readline().strip())
         ax.set_title(userInput("Title of Graph: ", is3))
     else:
         ax.set_title(flags[opts["title"]])
