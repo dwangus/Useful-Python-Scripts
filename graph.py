@@ -91,6 +91,14 @@ Options for running script:
                  either a photo viewer or matplotlib's utilities; shouldn't use this if
                  you're executing this script from command-line, unless you have some sort of
                  GUI for display
+ - '-linename __(some base name for lines)__': basically to avoid typing in line names/labels
+                                                 for many lines, if you set this flag with a
+                                                 base line name, say "program", then for as many
+                                                 lines in your graph, you'll have line labels of
+                                                 "program0, program1, program2, ...". Also, if
+                                                 you set the base line name as "program1", it
+                                                 will begin to increment the line names from there,
+                                                 so with line labels of "program1, program2, ...".
 
  - '-o __(some filename)__' or just '__(some filename)__': output base filename; can be specified
                                                              with the -o flag or not; if there
@@ -250,8 +258,26 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         ax.set_ylim(flags[opts["yrange"]][0], flags[opts["yrange"]][1])
 
     if not flags[opts["firstlabel"]]:
-        for l in range(len(lineData)):
-            lineNames.append(userInput("Enter a name for line{}: ".format(l), is3))
+        if len(flags[opts["linename"]]) > 0:
+            inputLineName = flags[opts["linename"]]
+            if any(char.isdigit() for char in inputLineName):
+                count = -1
+                while inputLineName[count].isdigit():
+                    count -= 1
+                if count == -1:
+                    appendInt = 0
+                    offset = len(inputLineName)
+                else:
+                    appendInt = int(inputLineName[(count+1):])
+                    offset = len(inputLineName) + count + 1
+            else:
+                appendInt = 0
+                offset = len(inputLineName)
+            for l in range(len(lineData)):
+                lineNames.append(inputLineName[:offset] + str(appendInt + l))
+        else:
+            for l in range(len(lineData)):
+                lineNames.append(userInput("Enter a name for line{}: ".format(l), is3))
     print("Labels for Lines:\n{}".format(lineNames))
     legend = ax.legend(lineNames, bbox_to_anchor=bboxAnchor, loc=locOption)
 
@@ -334,8 +360,8 @@ if __name__ == "__main__":
     usedArgs = [1] + [0]*(len(args)-1)
 
     opts = {"axis": 0, "firstlabel": 1, "section": 2, "select": 3, "xrange": 4, "yrange": 5, "xaxis": 6,\
-            "title":7, "xlabel":8, "ylabel":9, "beauty":10, "display":11, "savefile":12}
-    flags = [None, False, -1, [], (0,0), (0,0), False, "", "", "", False, False, ""]
+            "title":7, "xlabel":8, "ylabel":9, "beauty":10, "display":11, "savefile":12, "linename":13}
+    flags = [None, False, -1, [], (0,0), (0,0), False, "", "", "", False, False, "", ""]
 
     ### Choose which axis of data to interpret as X/Y
     if '-c' in args:
@@ -431,11 +457,18 @@ if __name__ == "__main__":
         flags[opts["display"]] = True
         usedArgs[args.index('-display')] = 1
 
+    if "-linename" in args:
+        argIndex = args.index('-linename')
+        flags[opts["linename"]] = args[(argIndex + 1)]
+        usedArgs[argIndex] = 1
+        usedArgs[(argIndex+1)] = 1
+
     ### Output base filename (base meaning, if you're trying to make multiple graphs with
     ### one execution of this script, it'll just append incremented integers to the filename
     ### for each new graph it saves)
     if "-o" in args:
         flags[opts["savefile"]] = args[(args.index("-o") + 1)]
+        print(args)
         usedArgs[args.index('-o')] = 1
     elif sum(usedArgs) == len(usedArgs)-1:
         print(usedArgs)
