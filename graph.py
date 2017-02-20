@@ -61,6 +61,8 @@ Options for running script:
                                          Line1 = 8,9,14, and Line2 = 12,-2,3, setting the
                                          flag "-xclude 0,1" would leave out Line1(2), Line2(2),
                                          Line1(3), Line2(3). (ONLY INTEGERS FOR 2nd ARGUMENT)
+                                         (New addition: you can also do 0-5,6-9,10,... for
+                                         ranges of excluded data-points!)
                                          
  - '-xrange __(lower limit),(upper limit)__': lower and upper range for x-axis ticks
                                                 (NO spaces in 2nd argument!)
@@ -158,7 +160,7 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
     #In case someone forgot, I just do it for them
     if flags[opts["xaxis"]] and 0 not in selection:
         selection.insert(0, 0)
-        
+    ### FirstLabel, Axis,  
     lineNames = []
     lineData = []
     if flags[opts["firstlabel"]]:
@@ -228,9 +230,23 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
                 if l in selection:
                     lineData.append([float(d) for d in data[l][startingColumn:]])
 
+    ### Exclude
     if len(flags[opts["exclude"]]) > 0:
         xp = flags[opts["exclude"]]
-        xpoints = [int(w.strip()) for w in xp.split(",") if isInt(w.strip())]
+        xpoints = xp.split("-")
+        if len(xpoints) == 0:
+            xpoints = [int(w.strip()) for w in xp.split(",") if isInt(w.strip())]
+        if len(xpoints) == 2:
+            xpoints = [a for a in range(int(xpoints[0].strip()), int(xpoints[1].strip())+1)]
+        else:
+            temp = [[int(a.strip()) for a in xpoints[0].split(',')[:-1] if isInt(a.strip())] + [b for b in range(int(xpoints[0].split(',')[-1].strip()), int(xpoints[1].split(',')[0].strip())+1)]] +\
+                   [[int(a.strip()) for a in xpoints[x].split(',')[1:-1] if isInt(a.strip())] + [b for b in range(int(xpoints[x].split(',')[-1].strip()), int(xpoints[x+1].split(',')[0].strip())+1)] for x in range(1, len(xpoints)-1)] +\
+                   [[int(a.strip()) for a in xpoints[-1].split(',')[1:] if isInt(a.strip())]]
+            flatten = []
+            for t in temp:
+                flatten += t
+            xpoints = flatten
+        #print("Excluding data points: ", xpoints)
         temp = []
         for i in range(len(lineData)):
             temp.append([])
@@ -238,7 +254,8 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
                 if j not in xpoints:
                     temp[-1].append(lineData[i][j])
         lineData = temp
-    
+
+    ### XAxis
     if flags[opts["xaxis"]]:
         xs = lineData[0]
         lineData = lineData[1:]
@@ -246,13 +263,16 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         xs = [i for i in range(1, len(lineData[0])+1)]#Maybe this needs to be 0-indexed someday... but not today!
 
     defaults = {'mark': 'o', 'line':'--', 'loc':2,\
-                'bbox':(1.05, 1)}
-                #'bbox':None}
+                'bbox':(1.05, 1), 'bottom':0.02, 'ms':4}
+                #'bbox':None
     markerShape = defaults['mark']
     lineStyle = defaults['line']
     locOption = defaults['loc']
     bboxAnchor = defaults['bbox']
+    bottomRoom = defaults['bottom']
+    markerSize = defaults['ms']
 
+    ### Beauty
     if flags[opts["beauty"]]:
         print("Simply skip any options if you want the default by pressing -enter-.")
         '''
@@ -268,10 +288,12 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         bboxAnchorY = sys.stdin.readline().strip()
         #'''
         mark = userInput("Enter a marker shape for all lines in this graph (Default: {}) (see matplotlib docs for examples): ".format(defaults['mark']), is3)
+        markerS = userInput("Enter a size for the data-point markers (Default: {}) (see matplotlib docs for examples): ".format(defaults['ms']), is3)
         linetype = userInput("Enter a line-style for all lines in this graph (Default: {}) (see matplotlib docs for examples): ".format(defaults['line']), is3)
         locChoice = userInput("Enter a location option for the graph's legend (Default: {}) (see matplotlib docs for examples): ".format(defaults['loc']), is3)
         bboxAnchorX = userInput("Enter a relative anchor X location for the graph's legend (Default: None) (see matplotlib docs for examples): ", is3)
         bboxAnchorY = userInput("Enter a relative anchor Y location for the graph's legend (Default: None) (see matplotlib docs for examples): ", is3)
+        bottomR = userInput("Enter a space for room on the bottom of the graph figure, if it might get cut off (Default: {}) (see matplotlib docs for examples): ".format(defaults['bottom']), is3)
         if len(mark) != 0:
             markerShape = mark
         if len(linetype) != 0:
@@ -280,14 +302,19 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
             locOption = int(locChoice)
         if len(bboxAnchorX) != 0 and len(bboxAnchorY) != 0:
             bboxAnchor = (float(bboxAnchorX), float(bboxAnchorY))
+        if len(bottomR) != 0:
+            bottomRoom = bottomR
+        if len(markerS) != 0:
+            markerSize = markerS
             
     ##### *Begin Plotting!* #####
     fig = plt.figure(1)
     ax = fig.add_subplot(111)
     for l in lineData:
         #print(lineData.index(l), l)
-        line, = ax.plot(xs, l, marker=markerShape, linestyle=lineStyle)
+        line, = ax.plot(xs, l, marker=markerShape, linestyle=lineStyle, markersize=markerSize)
 
+    ### XRange, YRange
     if flags[opts["xrange"]][0] != flags[opts["xrange"]][1]:
         print("\nX-axis Range: ", flags[opts["xrange"]])
         ax.set_xlim(flags[opts["xrange"]][0], flags[opts["xrange"]][1])
@@ -295,6 +322,7 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         print("Y-axis Range: ", flags[opts["yrange"]])
         ax.set_ylim(flags[opts["yrange"]][0], flags[opts["yrange"]][1])
 
+    ### LineName
     if not flags[opts["firstlabel"]]:
         if len(flags[opts["linename"]]) > 0:
             inputLineName = flags[opts["linename"]]
@@ -323,6 +351,7 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
     print("\nLabels for Lines:\n{}\n".format(lineNames))
     legend = ax.legend(lineNames, bbox_to_anchor=bboxAnchor, loc=locOption)
 
+    ### XLabel, YLabel
     if len(flags[opts["xlabel"]]) == 0:
         #print("\nX-Axis Label: ", end='')
         #ax.set_xlabel(sys.stdin.readline().strip())
@@ -338,6 +367,7 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         print("Y-axis label of graph is: ", flags[opts["ylabel"]])
         ax.set_ylabel(flags[opts["ylabel"]])
 
+    ### Title
     if len(flags[opts["title"]]) == 0:
         #print("\nTitle of Graph: ", end='')
         #ax.set_title(sys.stdin.readline().strip())
@@ -347,7 +377,9 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         ax.set_title(flags[opts["title"]])
 
     ax.grid('on')
+    fig.subplots_adjust(bottom=bottomRoom)
 
+    ### SaveFile
     ##### *Begin Saving!* #####
     if len(flags[opts["savefile"]]) == 0 and len(appendToFilename) == 0:
         outputfilename = "graph_test1"
@@ -361,7 +393,8 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
 
     print("\n\nSaved file to name {}.".format(outputfilename))
     print("####### Finished. #######\n\n")
-    
+
+    ### Display
     if is3 and flags[opts["display"]]:
         wwindow.open(outputfilename)
     elif flags[opts["display"]]:
