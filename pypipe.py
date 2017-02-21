@@ -1,5 +1,6 @@
 import subprocess
 from subprocess import call
+from subprocess import Popen
 import shlex
 import sys
 import os
@@ -77,7 +78,11 @@ def parseFile(filename):
     
     for c in range(len(commands)):
         intermediate = " ".join([arg.strip() for arg in commands[c]])
-
+        if "|" in intermediate:
+            intermediate2 = intermediate.split("|")
+        else:
+            intermediate2 = []
+            
         '''
         #Still need to fix how shlex interprets single quotes ' the same as
         # double quotes " in that it evaluates the string inside it and not
@@ -91,14 +96,30 @@ def parseFile(filename):
 
         commands[c] = shlex.split(intermediate)
         #'''
-        
-        if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True) != 0:
-            call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True)
+        if len(intermediate2) == 0:
+            if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True) != 0:
+                call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True)
 
-        sysParsed = open("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt", "r")
-        commands[c] = literal_eval(sysParsed.read())
-        sysParsed.close()
-        os.remove("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt")
+            sysParsed = open("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt", "r")
+            commands[c] = literal_eval(sysParsed.read())
+            sysParsed.close()
+            os.remove("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt")
+        else:
+            commands[c] = []
+            for i in range(len(intermediate2)):
+                x = intermediate2[i]
+                
+                if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + x, shell=True) != 0:
+                    call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + x, shell=True)
+
+                sysParsed = open("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt", "r")
+                
+                commands[c] += literal_eval(sysParsed.read())
+                if i != len(intermediate2)-1:
+                    commands[c].append("|")
+                
+                sysParsed.close()
+                os.remove("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt")
             
     return commands
     
@@ -126,11 +147,35 @@ if __name__ == '__main__':
         commands += parseFile(f)
 
     #print(commands)
-
+    
     #'''
-    for command in commands:
-        #print(subprocess.check_output(command).decode("utf-8"))
-        call(command)
+    #http://stackoverflow.com/questions/7389662/link-several-popen-commands-with-pipes
+    for com in commands:
+        if "|" not in com:
+            call(com)
+        else:
+            indices = [i for i, x in enumerate(com) if x == "|"]
+            processes = []
+            for ind in range(len(indices)):
+                index = indices[ind]
+                if ind != len(indices)-1:
+                    if ind != 0:
+                        processes.append(Popen(com[(indices[ind-1]+1):index], stdin=processes[-1].stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+                    else:
+                        processes.append(Popen(com[:index], stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+                elif ind == 0:
+                    processes.append(Popen(com[:index], stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+                    processes.append(Popen(com[(index+1):], stdin=processes[-1].stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+                else:
+                    processes.append(Popen(com[(indices[ind-1]+1):index], stdin=processes[-1].stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+                    processes.append(Popen(com[(index+1):], stdin=processes[-1].stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+            (output, err) = processes[-1].communicate()
+            exit_code = processes[0].wait()
+            if err:
+                print(err)
+            elif output:
+                print(output.decode('utf-8'))
     #'''
 
+    #TODO: https://www.cyberciti.biz/faq/howto-use-cat-command-in-unix-linux-shell-script/#s3
     
