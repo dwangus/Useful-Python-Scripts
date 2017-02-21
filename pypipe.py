@@ -57,6 +57,10 @@ Additional Note: can now "comment" out a command in your text file! Start the fi
 the command with "!@#" (e.g. to comment-out "echo\nWorld" you just have to change it to
 "!@#echo\nWorld")
 
+Note3: can also specify the flag "-shell" as an argument, which will cause the script to
+exactly execute the commands found in the specified text files in a newly-created shell;
+PLEASE use with caution.
+
 '''
 #######################################
 
@@ -67,7 +71,7 @@ the command with "!@#" (e.g. to comment-out "echo\nWorld" you just have to chang
 #print(x.decode("utf-8"))
 #print(shlex.split("-o 1 \"hello world\""))
 
-def parseFile(filename):
+def parseFile(filename, useShell=False):
     contents = open(filename, 'r').readlines()
     commands = [[]]
     for c in contents:
@@ -80,53 +84,56 @@ def parseFile(filename):
     if len(commands[-1]) == 0:
         commands = commands[:-1]
     
-    for c in range(len(commands)):
-        intermediate = " ".join([arg.strip() for arg in commands[c]])
-        if "|" in intermediate:
-            intermediate2 = intermediate.split("|")
-        else:
-            intermediate2 = []
-            
-        '''
-        #Still need to fix how shlex interprets single quotes ' the same as
-        # double quotes " in that it evaluates the string inside it and not
-        # the character itself (undesirable), while sys.argv interprets '
-        # differently from " in that it interprets ' as characters themselves
-        # and " as there being a string inside those quotes (desirable)
-        # ==> Google "Shlex python differs from sys.argv when reading ' character"
-        
-        #Essentially gave up at making shlex work correctly with every case of ' or " quotes
-        print(intermediate)
-
-        commands[c] = shlex.split(intermediate)
-        #'''
-        if len(intermediate2) == 0:
-            if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True) != 0:
-                call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True)
-
-            sysParsed = open("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt", "r")
-            commands[c] = literal_eval(sysParsed.read())
-            sysParsed.close()
-            os.remove("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt")
-        else:
-            commands[c] = []
-            for i in range(len(intermediate2)):
-                x = intermediate2[i]
+    if useShell:
+        for c in range(len(commands)):
+            commands[c] = " ".join([arg.strip() for arg in commands[c]])
+    else:
+        for c in range(len(commands)):
+            intermediate = " ".join([arg.strip() for arg in commands[c]])
+            if "|" in intermediate:
+                intermediate2 = intermediate.split("|")
+            else:
+                intermediate2 = []
                 
-                if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + x, shell=True) != 0:
-                    call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + x, shell=True)
+            '''
+            #Still need to fix how shlex interprets single quotes ' the same as
+            # double quotes " in that it evaluates the string inside it and not
+            # the character itself (undesirable), while sys.argv interprets '
+            # differently from " in that it interprets ' as characters themselves
+            # and " as there being a string inside those quotes (desirable)
+            # ==> Google "Shlex python differs from sys.argv when reading ' character"
+            
+            #Essentially gave up at making shlex work correctly with every case of ' or " quotes
+            print(intermediate)
+
+            commands[c] = shlex.split(intermediate)
+            #'''
+            if len(intermediate2) == 0:
+                if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True) != 0:
+                    call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + intermediate, shell=True)
 
                 sysParsed = open("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt", "r")
-                
-                commands[c] += literal_eval(sysParsed.read())
-                if i != len(intermediate2)-1:
-                    commands[c].append("|")
-                
+                commands[c] = literal_eval(sysParsed.read())
                 sysParsed.close()
                 os.remove("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt")
+            else:
+                commands[c] = []
+                for i in range(len(intermediate2)):
+                    x = intermediate2[i]
+                    
+                    if call("python3 pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + x, shell=True) != 0:
+                        call("python pypipe.py -parse-pypipe_py-never-set-this-flag-intentionally " + x, shell=True)
+
+                    sysParsed = open("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt", "r")
+                    
+                    commands[c] += literal_eval(sysParsed.read())
+                    if i != len(intermediate2)-1:
+                        commands[c].append("|")
+                    
+                    sysParsed.close()
+                    os.remove("pypipe_helper_temp_ASDASD111222333_xX_Yy.txt")
             
     return commands
-    
 
 if __name__ == '__main__':
     args = sys.argv[1:]
@@ -144,19 +151,29 @@ if __name__ == '__main__':
         print(comments)
         sys.exit()
 
+    if "-shell" in args:
+        useShell = True
+        args.pop(args.index("-shell"))
+    else:
+        useShell = False
+
     #print(args)
 
     commands = []
     for f in args:
-        commands += parseFile(f)
+        commands += parseFile(f, useShell)
 
     #print(commands)
     
     #'''
     #http://stackoverflow.com/questions/7389662/link-several-popen-commands-with-pipes
     for com in commands:
-        if com[0].startswith("!@#"):
+        if not useShell and com[0].startswith("!@#"):
             continue
+        elif useShell and com.startswith("!@#"):
+            continue
+        elif useShell:
+            call(com, shell=useShell)
         elif "|" not in com:
             call(com)
         else:
