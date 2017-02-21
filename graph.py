@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import webbrowser as wwindow
+import numpy as np
 
 ####################################################################################################
 commandHelp = '''
@@ -51,10 +52,14 @@ Options for running script:
                                     in the example above, that would also be specified
                                     as -c for axis-organization)
                                     
- - '-select __(int1),(int2),(...)__': which rows/columns of the given section to plot
-                                         lines for (NO spaces in 2nd argument!); if ommitted,
-                                         plots data for each line (interpreting different
-                                         lines depending on -c/-r)
+ - '-select __(int1),(int2),(...)__'
+                     OR
+   '-select __(int1)-(int2),(int3),(...)__': which rows/columns of the given section to plot
+                                             lines for (NO spaces in 2nd argument!); if ommitted,
+                                             plots data for each line (interpreting different
+                                             lines depending on -c/-r); can also do ranges of
+                                             lines, with start and ends of ranges inclusive
+                                             (e.g. 2-5,12,14 means lines 2,3,4,5,12,14)
 
  - '-xclude __(int1),(int2),(...)__': which data-points, across all lines, you want to leave
                                          out from data-set; i.e., if for x = 2,3,4, we have
@@ -110,6 +115,25 @@ Options for running script:
                                                  will begin to increment the line names from there,
                                                  so with line labels of "program1, program2, ...".
 
+ - '-linenames __(some name1),(some name2),(...)__': ditto with the '-linename' arg, except if you
+                                                         want to input custom line-names and not
+                                                         want to manually type them in each time,
+                                                         you can simply specify them beforehand,
+                                                         IN ORDER, comma-separated (WITHOUT SPACES)
+                                                         (e.g. linename1,LINENAME2, LiNeNaMe3)
+
+ - '-slope __(int1)-(int2),(int3),(...)__'
+                             OR
+   '-slope __(int1)-(int2),(int3),(int4)-e__': basically computes the slope for each line in your
+                                               data, for a given selection of points (first point is
+                                               0, second point is 1, etc.); can simply specify the
+                                               second argument to be '0-e' for the entire data range,
+                                               where 'e' stands for 'till the end'.
+                                               (e.g. '-regression 0,2-4,6-e' would specify the first
+                                               point, the 2nd-4th points, and rest of the points from
+                                               the 6th onwards as the input points to calculate the
+                                               linear regression slope for each line)
+
  - '-o __(some filename)__' or just '__(some filename)__': output base filename; can be specified
                                                              with the -o flag or not; if there
                                                              are multiple graphs, then we name each
@@ -144,6 +168,20 @@ def userInput(prompt, vers3):
         except NameError:
             print("Wrong input function based on version.")
             pass
+#Only splits by ',' and '-'
+def splitParse(string):
+    temp = string.split(",")
+    output = []
+    for o in range(len(temp)):
+        if "-" in temp[o]:
+            hyphenated = temp[o].split("-")
+            if len(hyphenated) != 2:
+                print("Incorrect formatting of ranges!")
+                sys.exit()
+            output.append((hyphenated[0],hyphenated[1]))
+        else:
+            output.append(temp[o])
+    return output
 ######################################################################
 
 
@@ -345,11 +383,12 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
                 lineNames.append(sys.stdin.readline().strip())
                 #'''
                 lineNames.append(inputLineName[:offset] + str(appendInt + l))
+        elif len(flags[opts["linenames"]]) > 0:
+            lineNames = [lName.strip() for lName in flags[opts["linenames"]].split(",")]
         else:
             for l in range(len(lineData)):
                 lineNames.append(userInput("Enter a name for line{}: ".format(l), is3))
     print("\nLabels for Lines:\n{}\n".format(lineNames))
-    legend = ax.legend(lineNames, bbox_to_anchor=bboxAnchor, loc=locOption)
 
     ### XLabel, YLabel
     if len(flags[opts["xlabel"]]) == 0:
@@ -367,6 +406,33 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         print("Y-axis label of graph is: ", flags[opts["ylabel"]])
         ax.set_ylabel(flags[opts["ylabel"]])
 
+    ### Regression
+    if len(flags[opts["slope"]]) > 0:
+        rawdataset = splitParse(flags[opts["slope"]])
+        regdataset = []
+        for r in rawdataset:
+            if type(r) is str and isInt(r):
+                regdataset.append(int(r))
+            elif type(r) is tuple and isInt(r[0]) and (isInt(r[1]) or r[1] == 'e'):
+                if r[1] == 'e':
+                    regdataset += [integ for integ in range(int(r[0]), len(xs))]
+                else:
+                    regdataset += [integ for integ in range(int(r[0]), int(r[1])+1)]
+            else:
+                print("Incorrect data-type formatting for ranges of slope data!")
+                sys.exit()
+        print("\n")
+        for l in range(len(lineData)):
+            print("Slope of {} line: ".format(lineNames[l]), end='')
+            lineSlope = np.polyfit(np.array([xs[i] for i in range(len(xs)) if i in regdataset]),\
+                                   np.array([lineData[l][i] for i in range(len(xs)) if i in regdataset]),\
+                                   1)[0]
+            print(lineSlope)
+            lineNames[l] += " (slope {:.3f} of points {})".format(lineSlope, flags[opts["slope"]])
+        print("\n")
+
+    legend = ax.legend(lineNames, bbox_to_anchor=bboxAnchor, loc=locOption)
+    
     ### Title
     if len(flags[opts["title"]]) == 0:
         #print("\nTitle of Graph: ", end='')
@@ -410,7 +476,7 @@ def main(fileData, flags, opts):
         is3 = False
 
     for l in range(len(fileData)):
-        fileData[l] = [w.strip() for w in fileData[l].split(",")]
+        fileData[l] = [w.strip() for w in fileData[l].split(",") if len(w.strip()) > 0]
     
     encountered = False
     sections = []
@@ -450,8 +516,8 @@ if __name__ == "__main__":
 
     opts = {"axis": 0, "firstlabel": 1, "section": 2, "select": 3, "xrange": 4, "yrange": 5, "xaxis": 6,\
             "title":7, "xlabel":8, "ylabel":9, "beauty":10, "display":11, "savefile":12, "linename":13,\
-            "exclude":14}
-    flags = [None, False, -1, [], (0,0), (0,0), False, "", "", "", False, False, "", "", ""]
+            "exclude":14, "linenames":15, "slope":16}
+    flags = [None, False, -1, [], (0,0), (0,0), False, "", "", "", False, False, "", "", "", "", ""]
 
     ### Choose which axis of data to interpret as X/Y
     if '-c' in args:
@@ -494,9 +560,25 @@ if __name__ == "__main__":
         temp = args[(argIndex + 1)]
         usedArgs[argIndex] = 1
         usedArgs[(argIndex+1)] = 1
-        
-        flags[opts["select"]] = [int(x) for x in temp.split(",") if isInt(x)]
+        #flags[opts["select"]] = [int(x) for x in temp.split(",") if isInt(x)]
 
+        stringIndices = [x for x in temp.split(",")]
+        tempIndices = []
+        for ti in stringIndices:
+            if "-" in ti:
+                ranges = ti.split("-")
+                if len(ranges) != 2 or not (isInt(ranges[0]) and isInt(ranges[1])):
+                    print("Incorrect formatting for select argument!")
+                    sys.exit()
+                tempIndices += [str(integer) for integer in range(int(ranges[0]), int(ranges[1])+1)]
+            elif isInt(ti):
+                tempIndices.append(ti)
+            else:
+                print("Incorrect formatting for select argument!")
+                sys.exit()
+        
+        flags[opts["select"]] = [int(x) for x in tempIndices]
+    
     ### Choose x-axis range for data points
     ### The argument after it looks like "0,5000" for a range of [0, 5000] on the x-axis of the plot
     if "-xrange" in args:
@@ -555,10 +637,21 @@ if __name__ == "__main__":
         flags[opts["linename"]] = args[(argIndex + 1)]
         usedArgs[argIndex] = 1
         usedArgs[(argIndex+1)] = 1
+    if "-linenames" in args:
+        argIndex = args.index('-linenames')
+        flags[opts["linenames"]] = args[(argIndex + 1)]
+        usedArgs[argIndex] = 1
+        usedArgs[(argIndex+1)] = 1
 
     if "-xclude" in args:
         argIndex = args.index('-xclude')
         flags[opts["exclude"]] = args[(argIndex + 1)]
+        usedArgs[argIndex] = 1
+        usedArgs[(argIndex+1)] = 1
+
+    if "-slope" in args:
+        argIndex = args.index('-slope')
+        flags[opts["slope"]] = args[(argIndex + 1)]
         usedArgs[argIndex] = 1
         usedArgs[(argIndex+1)] = 1
 
