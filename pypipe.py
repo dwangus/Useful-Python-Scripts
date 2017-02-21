@@ -53,6 +53,10 @@ Note: if you specify multiple commands and multiple files as arguments to pypipe
 pypipe.py will essentially execute everything in the sequential order you've specified, one after
 the other.
 
+Additional Note: can now "comment" out a command in your text file! Start the first line in
+the command with "!@#" (e.g. to comment-out "echo\nWorld" you just have to change it to
+"!@#echo\nWorld")
+
 '''
 #######################################
 
@@ -151,7 +155,9 @@ if __name__ == '__main__':
     #'''
     #http://stackoverflow.com/questions/7389662/link-several-popen-commands-with-pipes
     for com in commands:
-        if "|" not in com:
+        if com[0].startswith("!@#"):
+            continue
+        elif "|" not in com:
             call(com)
         else:
             indices = [i for i, x in enumerate(com) if x == "|"]
