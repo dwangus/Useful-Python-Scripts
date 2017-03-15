@@ -1,0 +1,54 @@
+##########################################################################################################################################################
+##### pypipe.py #####
+#####################
+
+ESTABLISH_VARIABLE hello_world = yesm
+
+ESTABLISH_VARIABLE xwassup = "hello"
+
+echo $%^hello_world^%$$%^xwassup^%$
+
+(that should end up equaling 'yesm"hello"')
+
+
+
+
+...How do I deal with piping? 
+Hmm... I guess, with the way my pypipe works right now, each "ESTABLISH_VARIABLE" only stays within the scope of the text file it lives in...
+
+OH WAIT! It'd be as simple as doing:
+
+ESTABLISH_VARIABLE x = 123
+
+	(...some commands...)
+	
+python pypipe.py pt2-omega.txt -PASSED_VAR $%^x^%$
+
+And I guess that would mean I need to write in another command-line option... 
+
+Hm? Oh wait, do I even need to have an in-text processing of "ESTABLISH_VARIABLE" text? I just need to be able to process $%^ and ^%$ since
+	if I'm creating a command-line option, I can just specify the variable as I type commands into the shell.
+It should probably be in the format of -ESTABLISH_VARIABLE x=(),y=(),hello_world=()
+	because that way, I can delimit each assigned variable to (), and specify multiple variables at once
+...Also, error-checking can be as simple as letting .txt scripts break if a specified variable, as we parse for the first occurrence of $%^,
+	take all the text until the next ^%$, and seeing if it's in the declared variables list, and if it's not, we simply break right there.
+	(So anything funky like $%^hello$%^_world^%$ would attempt to look up the string "hello$%^_world" in the variables list, probably not
+	find it, and break right then and there)
+
+##########################################################################################################################################################
+##### diff.py #####
+###################
+
+(it'd be good practice to try)
+
+"diff python 2 text files"
+
+stackoverflow.com/questions/3043026/comparing-two-text-files-in-python
+
+##########################################################################################################################################################
+##### tedious.py #####
+######################
+
+Soooo many more ideas, that'd make this even more handy -- need TODO.
+
+##########################################################################################################################################################

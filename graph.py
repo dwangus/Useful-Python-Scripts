@@ -272,7 +272,7 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
     if len(flags[opts["exclude"]]) > 0:
         xp = flags[opts["exclude"]]
         xpoints = xp.split("-")
-        if len(xpoints) == 0:
+        if len(xpoints) == 1:
             xpoints = [int(w.strip()) for w in xp.split(",") if isInt(w.strip())]
         if len(xpoints) == 2:
             xpoints = [a for a in range(int(xpoints[0].strip()), int(xpoints[1].strip())+1)]
@@ -454,7 +454,7 @@ def makeGraph(data, flags, opts, is3, appendToFilename=""):
         if len(filenameParts) == 1:
             outputfilename = filenameParts[0] + appendToFilename + ".png"
         else:
-            outputfilename = filenameParts[0] + appendToFilename + filenameParts[1]#base-name, numbering-order, extension
+            outputfilename = filenameParts[0] + appendToFilename + "." + filenameParts[1]#base-name, numbering-order, extension
     fig.savefig(outputfilename, bbox_extra_artists=(legend,), bbox_inches='tight')
 
     print("\n\nSaved file to name {}.".format(outputfilename))
